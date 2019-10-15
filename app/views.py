@@ -24,17 +24,24 @@ def index(request):
         if Score.objects.filter(flag_num=request.POST['token']):
             # 判断是否提交flag
             if Flag.objects.filter(flag_num=request.POST['flag']):
-                # 判断flag是否正确
+              # 判断flag是否正确
+              #  print("[log]"+Logs.objects.filter(flag_num=request.POST['flag'])[0].player_num)
+              #  print("[token]"+request.POST['token'])
+
                 if Flag.objects.filter(flag_num=request.POST['flag'])[0].target_num == Status.objects.filter(player_num=Score.objects.filter(flag_num=request.POST['token'])[0].player_num)[0].target_num:
                     log = -4
                 elif (utcnow - Flag.objects.filter(
                         flag_num=request.POST['flag'])[0].create_time).total_seconds() < 300:
                     log = 1
-                    Flag.objects.filter(flag_num=request.POST['flag']).update(create_time='2018-04-20 16:39:05')
+                    # Flag.objects.filter(flag_num=request.POST['flag']).update(create_time='2018-04-20 16:39:05')
                 else:
                     log = -2
-                
-                 
+                if Logs.objects.filter(flag_num=request.POST['flag']):
+                    for logi in Logs.objects.filter(flag_num=request.POST['flag']):
+                        if logi.player_num == Score.objects.filter(flag_num=request.POST['token'])[0].player_num:
+                            log = -2
+                            break
+
                 if log==1:
                     score_now = 100
                 elif log == -4:
@@ -43,7 +50,7 @@ def index(request):
                 fraction = Score.objects.filter(flag_num=request.POST['token'])[0].fraction + score_now
                 Score.objects.filter(flag_num=request.POST['token']).update(fraction=fraction)
                 print(score_now)
-                
+
             else:
                 log=0
             Logs(
@@ -53,7 +60,7 @@ def index(request):
             ).save()
         else:
             log = -1
-        
+
         if log == -1:
             message[0], message[1] = "warning", "选手token错误"
         elif log == 0:
@@ -65,7 +72,6 @@ def index(request):
         elif log == -4:
             message = "warning", "亲，恭喜你，成功的交了自己的flag！被扣除100分哦。"
     return render(request, 'index.html', {'message': message, 'mess': None, 'backimg': random.randint(0, 16)})
-
 
 def score(request):
     message = ['success', '来查看总榜了呢']
